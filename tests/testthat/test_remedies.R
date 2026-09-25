@@ -172,3 +172,54 @@ test_that("synthdid_event_study can return the replication draws", {
   expect_equal(dim(draws), c(10, ncol(d$Y)))
   expect_equal(apply(draws, 2, sd), es$se, tolerance = 1e-10)
 })
+
+test_that("stratified fit reports per-stratum n1_eff and dropped treated mass", {
+  d = trend.dgp()
+  strata = cut(d$sizes, quantile(d$sizes, c(0, .5, 1)), include.lowest = TRUE, labels = FALSE)
+  tau.s = synthdid_estimate_stratified(d$Y, d$N0, d$T0, strata = strata,
+                                       treated.weights = d$tw)
+  tab = attr(tau.s, 'strata.table')
+  strata.treated = strata[(d$N0 + 1):nrow(d$Y)]
+  for (s in tab$stratum) {
+    w = d$tw[as.character(strata.treated) == s]; w = w / sum(w)
+    expect_equal(tab$n1_eff[tab$stratum == s], 1 / sum(w^2), tolerance = 1e-10)
+  }
+  expect_equal(attr(tau.s, 'dropped.mass'), 0, tolerance = 1e-12)
+
+  strata2 = rep(1, nrow(d$Y)); strata2[nrow(d$Y)] = 2
+  tau.d = synthdid_estimate_stratified(d$Y, d$N0, d$T0, strata = strata2,
+                                       treated.weights = d$tw, drop.infeasible = TRUE)
+  tw.norm = d$tw / sum(d$tw)
+  expect_equal(attr(tau.d, 'dropped.mass'), tw.norm[length(tw.norm)], tolerance = 1e-10)
+})
+
+test_that("stratified_boot_rep return modes agree", {
+  d = trend.dgp()
+  strata = cut(d$sizes, quantile(d$sizes, c(0, .5, 1)), include.lowest = TRUE, labels = FALSE)
+  cl = rep(1:10, length.out = nrow(d$Y))
+  tau.s = synthdid_estimate_stratified(d$Y, d$N0, d$T0, strata = strata,
+                                       treated.weights = d$tw, cluster = cl)
+  set.seed(7); e = stratified_boot_rep(tau.s, "cluster", cl)
+  set.seed(7); dt = stratified_boot_rep(tau.s, "cluster", cl, return = "detail")
+  set.seed(7); ob = stratified_boot_rep(tau.s, "cluster", cl, return = "object")
+  expect_equal(unname(dt["estimate"]), e)
+  expect_true(dt["dropped.mass"] >= 0 && dt["dropped.mass"] < 1)
+  expect_s3_class(ob, "synthdid_estimate_stratified")
+  expect_equal(as.numeric(ob), e)
+})
+
+test_that("weighted omega minimizes the weighted unit-level pre-fit criterion (Prop 0')", {
+  # With the penalty fixed, the collapsed-target objective and the tw-weighted
+  # unit-level objective differ by a constant in omega, so the two programs have
+  # the same solution. Check via the objective difference at two feasible points.
+  d = trend.dgp()
+  N0 = d$N0; T0 = d$T0; N1 = nrow(d$Y) - N0
+  tw = d$tw / sum(d$tw)
+  Yco = d$Y[1:N0, 1:T0]; Ytr = d$Y[(N0 + 1):nrow(d$Y), 1:T0, drop = FALSE]
+  target = colSums(tw * Ytr)
+  f_coll = function(w0, w) sum((w0 + colSums(w * Yco) - target)^2)
+  f_unit = function(w0, w) sum(tw * rowSums(sweep(-Ytr, 2, w0 + colSums(w * Yco), "+")^2))
+  set.seed(3)
+  a = runif(N0); a = a / sum(a); b = runif(N0); b = b / sum(b)
+  expect_equal(f_unit(0.3, a) - f_coll(0.3, a), f_unit(-1, b) - f_coll(-1, b), tolerance = 1e-8)
+})

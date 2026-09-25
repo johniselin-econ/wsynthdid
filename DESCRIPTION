@@ -1,6 +1,6 @@
 Package: wsynthdid
 Title: Synthetic Difference-in-Difference Estimation with Weighted Extensions
-Version: 0.1.0
+Version: 0.1.1
 Author: Dmitry Arkhangelsky [aut]
         Susan Athey [aut]
         David A. Hirshberg [aut, cre]
@@ -47,4 +47,4 @@ Suggests:
 URL: https://github.com/johniselin-econ/wsynthdid
 BugReports: https://github.com/johniselin-econ/wsynthdid/issues
 Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

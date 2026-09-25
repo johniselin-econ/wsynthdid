@@ -25,8 +25,8 @@ balanced, with rows and columns in a fixed order shared with
 
 \item{adoption.time}{length-N vector giving each unit's first treated period,
 in the same units as \code{time}; use \code{Inf} for never-treated units. NA is an
-error (it would otherwise silently exclude the unit from every role); recode
-NA to \code{Inf} explicitly if it means never-treated.}
+error (it would otherwise silently exclude the unit from every role);
+recode NA to \code{Inf} explicitly if it means never-treated.}
 
 \item{time}{length-T vector of period labels, strictly increasing (enforced).
 Defaults to \code{1:ncol(Y)}. A unit j is treated in column t iff
@@ -67,8 +67,8 @@ bootstrap. Default FALSE.}
 
 \item{...}{additional options passed to every within-cohort
 \link{synthdid_estimate_weighted} call (e.g. \code{detrend = TRUE}). \code{X},
-\code{period.weights}, and \code{weights} are rejected with an error: cohorts
-have different time windows and donor pools, so panel-shaped arguments cannot
+\code{period.weights}, and \code{weights} are rejected with an error: cohorts have
+different time windows and donor pools, so panel-shaped arguments cannot
 be passed through.}
 }
 \value{
@@ -81,11 +81,4 @@ attributes 'cohort.fits' (named list of within-cohort fits), 'cohort.table'
 Splits a balanced panel into adoption-date cohorts, runs weighted SDID within
 each cohort against a pool of not-yet-treated (or never-treated) control units,
 and aggregates the cohort estimates with researcher-chosen cohort weights.
-}
-\details{
-Estimand: tau^(omega-tilde, stag) = sum_g W_g tau_g^(omega-tilde), where tau_g
-is the within-cohort weighted SDID effect and W_g the cohort weight. With
-\code{treated.weights = 1/N1} and \code{cohort.weight = "treated.periods"} this
-reduces to the standard staggered SDID of Clarke et al. (2023); a single cohort
-returns \link{synthdid_estimate_weighted} exactly.
 }

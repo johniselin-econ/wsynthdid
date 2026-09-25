@@ -120,6 +120,17 @@ placebo_se = function(estimate, replications) {
     sqrt((replications-1)/replications) * sd(replicate(replications, theta(sample(1:setup$N0))))
 }
 
+#' Normalize a non-negative weight vector to sum to one.
+#'
+#' Returns `x / sum(x)`, or uniform weights when `x` sums to zero. Used for the
+#' weight renormalization inside every resampling variance estimator, and
+#' exported so that external parallel drivers (e.g. a replication script's own
+#' bootstrap loop) can reproduce the package's renormalization exactly.
+#'
+#' @param x a numeric vector of non-negative weights.
+#' @return a numeric vector of the same length summing to one.
+#' @keywords internal
+#' @export
 sum_normalize = function(x) {
     if(sum(x) != 0) { x / sum(x) }
     else { rep(1/length(x), length(x)) }
@@ -348,11 +359,15 @@ placebo_se_weighted = function(estimate, replications, placebo.weights = "unifor
 
 # =============================================================================
 # CLUSTER-ROBUST VARIANCE ESTIMATION
-# Following the fixed-weight cluster bootstrap of Clarke et al. (2023)
-# as implemented in the Stata sdid package (Daniel-Pailanir)
+# Cluster bootstrap in the spirit of Clarke et al. (2023) / the Stata sdid
+# package (Daniel-Pailanir). NOTE: this implementation REFITS omega and lambda
+# in every draw (opts keep update.omega = update.lambda = TRUE; the subset
+# weights are only the Frank-Wolfe starting point). The cluster jackknife below
+# is the fixed-weight variant.
 # =============================================================================
 
-# Cluster bootstrap SE: resample clusters with replacement, subset fixed weights
+# Cluster bootstrap SE: resample clusters with replacement, renormalize the
+# subset weights as the starting point, refit
 cluster_bootstrap_se_weighted = function(estimate, replications, cluster) {
     setup = attr(estimate, 'setup')
     opts = attr(estimate, 'opts')

@@ -37,7 +37,11 @@
 #'        call (e.g. detrend = TRUE).
 #' @return The aggregate estimate: a scalar of class 'synthdid_estimate_stratified' with attributes
 #'         'strata.fits' (named list of within-stratum synthdid_estimate_weighted objects),
-#'         'strata.table' (data.frame: stratum, N1, N0, share, estimate),
+#'         'strata.table' (data.frame: stratum, N1, N0, share, estimate, n1_eff --
+#'         the Kish effective number of treated units within the stratum),
+#'         'strata.dropped' (names of dropped strata) and 'dropped.mass' (the
+#'         treated-weight mass they carried; > 0 means the aggregate targets the
+#'         renormalized rather than the original estimand),
 #'         'setup' (list: Y, N0, T0, strata), 'treated.weights', 'cluster', and 'opts'
 #'         (the extra arguments, re-applied on every vcov() refit).
 #' @export synthdid_estimate_stratified
@@ -82,12 +86,18 @@ synthdid_estimate_stratified = function(Y, N0, T0, strata,
     fits[[s]] = fit
     rows[[s]] = data.frame(stratum = s, N1 = length(trt.local), N0 = length(ctl.idx),
                            share = share, estimate = as.numeric(fit),
+                           n1_eff = 1 / sum(tw.s^2),
                            stringsAsFactors = FALSE)
   }
   if (length(fits) == 0) stop("no estimable stratum")
 
   strata.table = do.call(rbind, rows)
   rownames(strata.table) = NULL
+  # Treated-weight mass in dropped strata. Renormalizing the remaining shares
+  # changes the target when this is > 0, so callers (and the bootstrap) should
+  # record it rather than treat the aggregate as an estimate of the full target.
+  dropped.mass = 1 - sum(strata.table$share)
+  if (abs(dropped.mass) < 1e-10) dropped.mass = 0   # floating-point residue, not dropped mass
   strata.table$share = strata.table$share / sum(strata.table$share)  # renormalize if any dropped
   estimate = sum(strata.table$share * strata.table$estimate)
 
@@ -96,6 +106,7 @@ synthdid_estimate_stratified = function(Y, N0, T0, strata,
   attr(estimate, 'strata.fits')     = fits
   attr(estimate, 'strata.table')    = strata.table
   attr(estimate, 'strata.dropped')  = dropped
+  attr(estimate, 'dropped.mass')    = dropped.mass
   attr(estimate, 'setup')           = list(Y = Y, N0 = N0, T0 = T0, strata = strata)
   attr(estimate, 'treated.weights') = treated.weights
   attr(estimate, 'cluster')         = cluster
@@ -159,9 +170,35 @@ stratified_bootstrap_sample = function(object, replications, cluster = attr(obje
   draws
 }
 
-# A single resample-and-refit replication. method: "unit" or "cluster".
-# Returns NA if the draw empties one side of the panel or the refit fails.
-stratified_boot_rep = function(object, method, cluster = NULL) {
+#' One stratified bootstrap replication (resample and full refit).
+#'
+#' Draws a unit- or cluster-level resample of the panel stored in a
+#' [synthdid_estimate_stratified] object, rebuilds the strata from the drawn
+#' rows, and re-runs the entire stratified estimator with
+#' `drop.infeasible = TRUE`. This is the building block of
+#' `vcov.synthdid_estimate_stratified`; it is exported so that parallel drivers
+#' can call it with their own seeds and reproduce the package's bootstrap exactly.
+#'
+#' @param object a `synthdid_estimate_stratified` object.
+#' @param method `"unit"` or `"cluster"`.
+#' @param cluster a vector of cluster IDs of length `nrow(Y)` (required when
+#'        `method = "cluster"`).
+#' @param return what to return: `"estimate"` (default) gives the refit aggregate
+#'        as a numeric scalar; `"detail"` gives `c(estimate, dropped.mass)`, where
+#'        `dropped.mass` is the treated-weight mass of strata dropped inside the
+#'        draw (so callers can audit how far the resampled target drifts from the
+#'        original); `"object"` gives the refit `synthdid_estimate_stratified`
+#'        object itself (e.g. to compute a resampled event-study curve).
+#' @return see `return`. A draw that empties one side of the panel, or whose
+#'         refit fails, yields `NA_real_`, `c(NA, NA)`, or `NULL` respectively.
+#' @keywords internal
+#' @export
+stratified_boot_rep = function(object, method, cluster = NULL,
+                               return = c("estimate", "detail", "object")) {
+  return = match.arg(return)
+  fail = switch(return, estimate = NA_real_,
+                detail = c(estimate = NA_real_, dropped.mass = NA_real_),
+                object = NULL)
   setup = attr(object, 'setup')
   tw    = attr(object, 'treated.weights')
   opts  = attr(object, 'opts')
@@ -178,7 +215,7 @@ stratified_boot_rep = function(object, method, cluster = NULL) {
     control.ind   = sort(ind[ind <= N0])
     treated.local = sort(ind[ind > N0]) - N0
   }
-  if (length(control.ind) == 0 || length(treated.local) == 0) return(NA_real_)
+  if (length(control.ind) == 0 || length(treated.local) == 0) return(fail)
 
   all.ind = c(control.ind, N0 + treated.local)
   args = c(list(Y = setup$Y[all.ind, , drop = FALSE],
@@ -187,6 +224,10 @@ stratified_boot_rep = function(object, method, cluster = NULL) {
                 treated.weights = sum_normalize(tw[treated.local]),
                 cluster = NULL, drop.infeasible = TRUE),
            opts)
-  tryCatch(as.numeric(do.call(synthdid_estimate_stratified, args)),
-           error = function(e) NA_real_)
+  fit = tryCatch(do.call(synthdid_estimate_stratified, args), error = function(e) NULL)
+  if (is.null(fit)) return(fail)
+  switch(return,
+         estimate = as.numeric(fit),
+         detail   = c(estimate = as.numeric(fit), dropped.mass = attr(fit, 'dropped.mass')),
+         object   = fit)
 }

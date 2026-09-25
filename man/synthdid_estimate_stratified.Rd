@@ -47,7 +47,11 @@ call (e.g. detrend = TRUE).}
 \value{
 The aggregate estimate: a scalar of class 'synthdid_estimate_stratified' with attributes
 'strata.fits' (named list of within-stratum synthdid_estimate_weighted objects),
-'strata.table' (data.frame: stratum, N1, N0, share, estimate),
+'strata.table' (data.frame: stratum, N1, N0, share, estimate, n1_eff --
+the Kish effective number of treated units within the stratum),
+'strata.dropped' (names of dropped strata) and 'dropped.mass' (the
+treated-weight mass they carried; > 0 means the aggregate targets the
+renormalized rather than the original estimand),
 'setup' (list: Y, N0, T0, strata), 'treated.weights', 'cluster', and 'opts'
 (the extra arguments, re-applied on every vcov() refit).
 }
