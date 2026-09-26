@@ -1,4 +1,4 @@
-# synthdid: Weighted Synthetic Difference-in-Differences
+# wsynthdid: Weighted Synthetic Difference-in-Differences
 
 This is a fork of the [`synthdid`](https://github.com/synth-inference/synthdid) R package that extends the synthetic difference-in-differences estimator of Arkhangelsky et al. (2021) with **user-specified weights on treated units**.
 
@@ -19,7 +19,8 @@ The standard SDID estimator averages treated units equally. When treated units d
 ### Installation
 
 ```R
-devtools::install_github("johniselin-econ/wsynthdid")
+devtools::install_github("johniselin-econ/wsynthdid")          # latest
+devtools::install_github("johniselin-econ/wsynthdid@v0.1.1")   # the version used in the paper
 ```
 
 ### Quick example
@@ -56,9 +57,13 @@ plot_event_study(es)
 
 John Iselin and Erica Ryan. **Weighted Synthetic Difference-in-Differences**. Working paper, 2026.
 
-The paper applies the weighted estimator to the ACA Medicaid expansion, following Borgschulte and Vogler (2020): the equally-weighted SDID estimate is near zero while the population-weighted estimate indicates a mortality reduction of roughly 17 deaths per 100,000, demonstrating that the weighting choice can be economically consequential.
+The paper applies the weighted estimator to the county-level mortality effects of the 2014 ACA Medicaid expansion, following Borgschulte and Vogler (2020). The equally-weighted SDID estimate is near zero. The unconditional population-weighted estimate is about −17.5 deaths per 100,000 but fails an in-time placebo: mortality trends vary with county size, and control weights re-solved against the population-weighted target remain size-unrepresentative. The size-stratified estimator (`synthdid_estimate_stratified()`), which keeps the population-weighted estimand while comparing each county only with same-size donors, gives about −4.8 (SE 3.9) with no detectable all-cause placebo effect; its interval admits both meaningful reductions and zero. The weighting choice selects both the estimand and the identification burden.
 
-The manuscript, supplement, and full replication package (data pipeline, application analysis, Monte Carlo sweeps, and an `renv` lockfile that pins this package by commit) live in a separate repository: [**johniselin-econ/weighted-sdid**](https://github.com/johniselin-econ/weighted-sdid). This repository is the estimator only.
+The manuscript, supplement, and full replication package (data pipeline, application analysis, Monte Carlo sweeps, and an `renv` lockfile that pins this package at v0.1.1, commit `3c25415`) live in a separate repository, [**johniselin-econ/weighted-sdid**](https://github.com/johniselin-econ/weighted-sdid), which will be made public with the paper. This repository is the estimator only.
+
+### Citation
+
+See [`CITATION.cff`](CITATION.cff), or GitHub's "Cite this repository" button. Please also cite Arkhangelsky et al. (2021) for the underlying estimator.
 
 ### References
 

@@ -1,6 +1,11 @@
 # =============================================================================
-# test_weighted.R — weighted SDID extension tests using the ACA application data
-# Run from synthdid_weights/tests/ with: Rscript test_weighted.R
+# aca_application_checks.R — weighted SDID checks on the ACA application data
+# (formerly tests/test_weighted.R). Not part of R CMD check: it needs
+# paper/data/analysis_data.csv from the paper repository
+# (johniselin-econ/weighted-sdid), which left this repo at the July 2026 split.
+# To run: copy that file to ../paper/data/ relative to this directory, then
+#   Rscript aca_application_checks.R
+# Last recorded output: aca_application_checks_output.txt
 # =============================================================================
 
 # ── Load package functions ────────────────────────────────────────────────────

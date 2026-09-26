@@ -1,0 +1,76 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it as below, together with
+  Arkhangelsky et al. (2021) for the underlying synthetic
+  difference-in-differences estimator.
+type: software
+title: "wsynthdid: Weighted Synthetic Difference-in-Differences"
+abstract: >-
+  An R package extending the synthdid estimator of Arkhangelsky et al. (2021)
+  with researcher-specified weights on treated units and post-treatment
+  periods, size-stratified and staggered-adoption variants, weighted
+  bootstrap, jackknife, and placebo variance estimators with cluster-robust
+  options, and event-study decomposition.
+authors:
+  - family-names: Iselin
+    given-names: John
+    affiliation: The Budget Lab at Yale
+  - family-names: Ryan
+    given-names: Erica
+version: 0.1.1
+date-released: "2026-09-25"
+repository-code: "https://github.com/johniselin-econ/wsynthdid"
+license:
+  - GPL-2.0-or-later
+  - BSD-3-Clause
+keywords:
+  - synthetic difference-in-differences
+  - causal inference
+  - panel data
+  - R
+references:
+  - type: software
+    title: synthdid
+    authors:
+      - family-names: Arkhangelsky
+        given-names: Dmitry
+      - family-names: Athey
+        given-names: Susan
+      - family-names: Hirshberg
+        given-names: David A.
+      - family-names: Imbens
+        given-names: Guido W.
+      - family-names: Wager
+        given-names: Stefan
+    repository-code: "https://github.com/synth-inference/synthdid"
+  - type: article
+    title: Synthetic Difference-in-Differences
+    authors:
+      - family-names: Arkhangelsky
+        given-names: Dmitry
+      - family-names: Athey
+        given-names: Susan
+      - family-names: Hirshberg
+        given-names: David A.
+      - family-names: Imbens
+        given-names: Guido W.
+      - family-names: Wager
+        given-names: Stefan
+    journal: American Economic Review
+    volume: 111
+    issue: 12
+    start: 4088
+    end: 4118
+    year: 2021
+    doi: 10.1257/aer.20190159
+preferred-citation:
+  type: unpublished
+  title: Weighted Synthetic Difference-in-Differences
+  authors:
+    - family-names: Iselin
+      given-names: John
+      affiliation: The Budget Lab at Yale
+    - family-names: Ryan
+      given-names: Erica
+  year: 2026
+  notes: Working paper

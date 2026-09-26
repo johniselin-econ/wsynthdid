@@ -7,7 +7,7 @@ test_that("synthdid point estimate agrees with the reference implementation", {
     data(california_prop99)
     setup = panel.matrices(california_prop99)
     expect_equal(c(synthdid_estimate(setup$Y, setup$N0, setup$T0, min.decrease=min.decrease, max.iter=max.iter)),
-		 c(synthdid:::synthdid.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
+		 c(wsynthdid:::synthdid.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
 })
 
 test_that("sc point estimate agrees with the reference implementation", {
@@ -15,7 +15,7 @@ test_that("sc point estimate agrees with the reference implementation", {
     data(california_prop99)
     setup = panel.matrices(california_prop99)
     expect_equal(c(sc_estimate(setup$Y, setup$N0, setup$T0, min.decrease=min.decrease, max.iter=max.iter)),
-		 c(synthdid:::sc.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
+		 c(wsynthdid:::sc.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
 })
 
 test_that("did point estimate agrees with the reference implementation", {
@@ -23,6 +23,6 @@ test_that("did point estimate agrees with the reference implementation", {
     data(california_prop99)
     setup = panel.matrices(california_prop99)
     expect_equal(c(did_estimate(setup$Y, setup$N0, setup$T0)),
-		 c(synthdid:::did.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
+		 c(wsynthdid:::did.reference(setup$Y, setup$N0, setup$T0)), tol=tol)
 })
 }
